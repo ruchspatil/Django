@@ -1,0 +1,60 @@
+Question 1: By default are Django signals executed synchronously or asynchronously?
+Answer: Django signals are executed synchronously by default. When a signal is sent, the receiver functions are executed immediately in the order they were connected.
+
+Code Snippet:
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.test import TestCase
+from django.contrib.auth.models import User
+
+# A simple receiver function
+@receiver(post_save, sender=User)
+def user_saved(sender, instance, created, **kwargs):
+    print("User saved:", instance.username)
+
+class SignalTestCase(TestCase):
+    def test_user_save_signal(self):
+        user = User(username='testuser')
+        user.save()  # This will trigger the user_saved signal synchronously.
+
+       
+Question 2: Do Django signals run in the same thread as the caller?
+Answer: Yes, Django signals run in the same thread as the caller. This means that when you trigger a signal, the receiver functions are executed in the same context as the function that called the signal.
+
+Code Snippet:
+import threading
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.test import TestCase
+from django.contrib.auth.models import User
+
+@receiver(post_save, sender=User)
+def user_saved(sender, instance, created, **kwargs):
+    print("Current thread:", threading.current_thread().name)
+
+class SignalTestCase(TestCase):
+    def test_signal_thread(self):
+        user = User(username='testuser')
+        user.save()  # This will run user_saved in the same thread.
+     
+Question 3: By default do Django signals run in the same database transaction as the caller?
+Answer: Yes, by default, Django signals run in the same database transaction as the caller. If a signal is triggered during a transaction, the receiver functions can access the same transaction context.
+
+Code Snippet:
+from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.test import TestCase
+from django.contrib.auth.models import User
+
+@receiver(post_save, sender=User)
+def user_saved(sender, instance, created, **kwargs):
+    # Access the database state after the user is saved
+    print("User created:", created)
+
+class SignalTestCase(TestCase):
+    def test_signal_transaction(self):
+        with transaction.atomic():
+            user = User(username='testuser')
+            user.save()  # user_saved runs in the same transaction.
+          
