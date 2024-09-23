@@ -1,1 +1,19 @@
+Question 1: By default are Django signals executed synchronously or asynchronously?
+Answer: Django signals are executed synchronously by default. When a signal is sent, the receiver functions are executed immediately in the order they were connected.
 
+Code Snippet:
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.test import TestCase
+from django.contrib.auth.models import User
+
+# A simple receiver function
+@receiver(post_save, sender=User)
+def user_saved(sender, instance, created, **kwargs):
+    print("User saved:", instance.username)
+
+class SignalTestCase(TestCase):
+    def test_user_save_signal(self):
+        user = User(username='testuser')
+        user.save()  # This will trigger the user_saved signal synchronously.
+       
